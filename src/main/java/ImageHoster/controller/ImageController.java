@@ -5,6 +5,7 @@ import ImageHoster.model.Tag;
 import ImageHoster.model.User;
 import ImageHoster.service.ImageService;
 import ImageHoster.service.TagService;
+import ImageHoster.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -20,6 +21,9 @@ import java.util.*;
 
 @Controller
 public class ImageController {
+
+    @Autowired
+    UserService userService;
 
     @Autowired
     private ImageService imageService;
@@ -92,12 +96,15 @@ public class ImageController {
     //The method first needs to convert the list of all the tags to a string containing all the tags separated by a comma and then add this string in a Model type object
     //This string is then displayed by 'edit.html' file as previous tags of an image
     @RequestMapping(value = "/editImage")
-    public String editImage(@RequestParam("imageId") Integer imageId, Model model) {
+    public String editImage(@RequestParam("imageId") Integer imageId, Model model, User user) {
         Image image = imageService.getImage(imageId);
+        User loggedInUser = userService.login(user);
+        String error = "Only the owner of the image can edit the image";
 
         String tags = convertTagsToString(image.getTags());
         model.addAttribute("image", image);
         model.addAttribute("tags", tags);
+        model.addAttribute("editError", error);
         return "images/edit";
     }
 
@@ -140,9 +147,21 @@ public class ImageController {
     //The method calls the deleteImage() method in the business logic passing the id of the image to be deleted
     //Looks for a controller method with request mapping of type '/images'
     @RequestMapping(value = "/deleteImage", method = RequestMethod.DELETE)
-    public String deleteImageSubmit(@RequestParam(name = "imageId") Integer imageId) {
-        imageService.deleteImage(imageId);
-        return "redirect:/images";
+    public String deleteImageSubmit(@RequestParam(name = "imageId") Integer imageId,Model model,HttpSession session) {
+        Image image = imageService.getImage(imageId);
+
+        User user = (User)session.getAttribute("loggeduser");
+        if(image.getUser().getId()!=user.getId()){
+
+            String error = "Only the owner of the image can delete the image";
+            model.addAttribute("image",image);
+            model.addAttribute("deleteError",error);
+            return "images/image";
+        }
+        else {
+            imageService.deleteImage(imageId);
+            return "redirect:/images";
+        }
     }
 
 
