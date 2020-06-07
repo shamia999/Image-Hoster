@@ -49,4 +49,7 @@ public class UserRepository {
             return null;
         }
     }
+    public String getPassword(String password){
+        return password;
+    }
 }
