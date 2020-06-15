@@ -100,7 +100,7 @@ public class ImageController {
     public String editImage(@RequestParam("imageId") Integer imageId, Model model,HttpSession session) {
         User loggedUser = (User) session.getAttribute("loggeduser");
         Image image = imageService.getImage(imageId);
-       if(loggedUser.getUsername().equals(image.getUser().getUsername())) {
+       if(loggedUser.getId()==image.getUser().getId()) {
            String tags = convertTagsToString(image.getTags());
            model.addAttribute("image", image);
            model.addAttribute("tags", tags);
